@@ -1,5 +1,7 @@
 # HVAC PID
 
+*Disclaimer: This library was implemented with the supervised help of AI.*
+
 HVAC PID is a general-purpose Elixir PID controller for discrete control
 loops. It supports direct and reverse action, independent P, I, and D
 terms, bounded output with anti-windup, a hold deadzone, and smooth
