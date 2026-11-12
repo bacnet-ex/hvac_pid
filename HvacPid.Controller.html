@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="x-ua-compatible" content="ie=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="ExDoc v0.40.4">
+    <meta name="project" content="HVAC PID v0.1.1">
+
+
+    <title>HvacPid.Controller — HVAC PID v0.1.1</title>
+
+    <link rel="stylesheet" href="dist/html-elixir-RXHHCTJW.css" />
+
+    <script defer src="dist/sidebar_items-726C080C.js"></script>
+    <script defer src="docs_config.js"></script>
+    <script defer src="dist/html-MI33G4N7.js"></script>
+
+  </head>
+  <body>
+    <script>(()=>{var t="ex_doc:settings",e="dark";var o="dark",s="light";var E="sidebar_state",n="closed";var r="sidebar_width";var a="sidebar-open";var i=new URLSearchParams(window.location.search),S=i.get("theme")||JSON.parse(localStorage.getItem(t)||"{}").theme;(S===o||S!==s&&window.matchMedia("(prefers-color-scheme: dark)").matches)&&document.body.classList.add(e);var d=sessionStorage.getItem(E),A=d!==n&&!window.matchMedia(`screen and (max-width: ${768}px)`).matches;document.body.classList.toggle(a,A);var c=sessionStorage.getItem(r);c&&document.body.style.setProperty("--sidebarWidth",`${c}px`);var p=/(Macintosh|iPhone|iPad|iPod)/.test(window.navigator.userAgent);document.documentElement.classList.toggle("apple-os",p);})();
+</script>
+
+<div class="body-wrapper">
+
+<button id="sidebar-menu" class="sidebar-button sidebar-toggle" aria-label="toggle sidebar" aria-controls="sidebar">
+  <i class="ri-menu-line ri-lg" title="Collapse/expand sidebar"></i>
+</button>
+
+<nav id="sidebar" class="sidebar">
+
+  <div class="sidebar-header">
+    <div class="sidebar-projectInfo">
+
+      <div>
+        <a href="HvacPid.html" class="sidebar-projectName" translate="no">
+HVAC PID
+        </a>
+        <div class="sidebar-projectVersion" translate="no">
+          v0.1.1
+        </div>
+      </div>
+    </div>
+    <ul id="sidebar-list-nav" class="sidebar-list-nav" role="tablist" data-extras="Pages"></ul>
+  </div>
+</nav>
+
+<output role="status" id="toast"></output>
+
+<main class="content page-module" id="main" data-type="modules">
+  <div id="content" class="content-inner">
+    <div class="top-search">
+      <div class="search-settings">
+        <form class="search-bar" action="search.html">
+          <label class="search-label">
+            <span class="sr-only">Search documentation of HVAC PID</span>
+            <div class="search-input-wrapper">
+              <input name="q" type="text" class="search-input" placeholder="Press / to search" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+              <button type="button" tabindex="-1" class="search-close-button" aria-hidden="true">
+                <i class="ri-close-line ri-lg" title="Cancel search"></i>
+              </button>
+            </div>
+          </label>
+        </form>
+        <div class="autocomplete">
+        </div>
+        <div class="engine-selector" data-multiple="false">
+          <button type="button" class="engine-button" aria-label="Select search engine" aria-haspopup="true" aria-expanded="false">
+            <i class="ri-search-2-line" aria-hidden="true"></i>
+            <span class="engine-name">Default</span>
+            <i class="ri-arrow-down-s-line" aria-hidden="true"></i>
+          </button>
+          <div class="engine-dropdown" hidden role="menu">
+
+              <button type="button"
+                      class="engine-option"
+                      data-engine-url="search.html?q="
+                      role="menuitemradio"
+                      aria-checked="true">
+                <span class="name">Default</span>
+                <span class="help">In-browser search</span>
+              </button>
+
+          </div>
+        </div>
+        <button class="icon-settings display-settings">
+          <i class="ri-settings-3-line"></i>
+          <span class="sr-only">Settings</span>
+        </button>
+      </div>
+    </div>
+
+<div id="top-content">
+  <div class="heading-with-actions top-heading">
+    <h1>
+      <span translate="no">HvacPid.<wbr />Controller</span> 
+      <small class="app-vsn" translate="no">(HVAC PID v0.1.1)</small>
+
+    </h1>
+
+
+
+
+      <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L1" title="View Source" class="icon-action" rel="help nofollow">
+        <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        <span class="sr-only">View Source</span>
+      </a>
+
+  </div>
+
+
+    <section id="moduledoc">
+<p>A general-purpose PID controller for discrete control loops. The caller
+supplies the clock, samples, and actuator interface.</p><p>Keep one state per loop and pass the state returned by each operation into
+the next one. The controller starts disabled. Once enabled, it computes
+commands as samples arrive through <a href="#step/4"><code class="inline">step/4</code></a>.</p><h2 id="module-choosing-a-direction" class="section-heading"><a href="#module-choosing-a-direction" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Choosing a direction</span></h2><p>Choose the direction based on how a larger command affects the measured
+value.</p><ul><li><code class="inline">:direct</code> is the default. The signed error is <code class="inline">setpoint - measurement</code>,
+so it is positive when the measured value is below the setpoint. Use
+this direction when a larger command raises the measured value, as
+with a heater.</li><li><code class="inline">:reverse</code> uses <code class="inline">measurement - setpoint</code>, so the error is positive when
+the measured value is above the setpoint. Use this direction when a
+larger command lowers the measured value, as with a cooler.</li></ul><p>The direction sets the sign convention for all three PID terms.</p><h2 id="module-control-law" class="section-heading"><a href="#module-control-law" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Control law</span></h2><p>The controller uses the positional form of PID. The integral uses the
+current error over the whole sample interval (rectangular integration).
+The derivative uses the difference between successive samples.</p><pre><code class="text">s       = +1 for direct action, -1 for reverse action
+e       = s * (setpoint - measurement)
+P       = Kp * e
+delta_I = Kp * (elapsed_seconds / Tn) * e
+change  = -s * (measurement - previous_measurement)    on measurement
+change  = e - previous_error                          on error
+D       = Kp * Td * (change / elapsed_seconds)
+raw     = bias + tracking_adjustment + P + I + D
+output  = clamp(raw, out_min, out_max)</code></pre><p><code class="inline">Kp</code> is in output units per measurement unit. <code class="inline">Tn</code> and <code class="inline">Td</code> are in seconds.
+<code class="inline">P</code>, <code class="inline">I</code>, <code class="inline">D</code>, the bias, and the tracking adjustment are all in output
+units. Set <code class="inline">tn</code> to enable integral action and <code class="inline">td</code> to enable derivative
+action. Set either to <code class="inline">nil</code> to switch that term off. You can switch off the
+proportional term with <code class="inline">p_enabled: false</code> while keeping <code class="inline">kp</code> for I and D.</p><p>The derivative defaults to <code class="inline">:measurement</code>, so moving the setpoint alone
+leaves D at zero. With <code class="inline">derivative_on: :error</code>, a changing setpoint also
+contributes to D. That can help a loop follow a ramped setpoint. A sudden
+setpoint change can produce a large one-sample response called derivative
+kick. Both sources give the same derivative at a fixed setpoint.</p><h3 id="module-saturation-and-the-deadzone" class="section-heading"><a href="#module-saturation-and-the-deadzone" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Saturation and the deadzone</span></h3><p>Before adding the new integral increment, the controller computes the raw
+output with the previous integral. A positive increment can use the
+headroom up to the upper bound. A negative increment can use the headroom
+down to the lower bound. The controller discards any remainder, then clamps
+the output. This prevents the integral from accumulating in the direction
+of saturation while allowing it to help bring the output back into range.
+The limits apply to the combined output. For instance, I can be negative
+with an output range of 0 to 100.</p><p>A positive <code class="inline">deadzone</code> holds the previous output when the absolute error is
+at or below that radius. The integral and tracking adjustment stay fixed.
+Each held sample still updates the derivative history, so on exit the
+derivative uses the sample immediately before the exit. A zero radius
+disables the hold. Startup and reanchoring take precedence over the hold.</p><h2 id="module-startup-manual-control-and-retuning" class="section-heading"><a href="#module-startup-manual-control-and-retuning" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Startup, manual control, and retuning</span></h2><p>Call <a href="#set_mode/2"><code class="inline">set_mode/2</code></a> with <code class="inline">:automatic</code> to start. On the first valid sample,
+the controller emits the clamped <code class="inline">start_value</code> if one is configured.
+Otherwise it emits the clamped sum of the bias and P. I and D start at zero
+and run from the second sample onward. Setting <code class="inline">:disabled</code> clears the
+controller's history and immediately selects the clamped <code class="inline">stop_value</code> or,
+by default, the lower bound. Read that command with <a href="#output/1"><code class="inline">output/1</code></a>.</p><p>Manual mode selects a command immediately. If an external override applies
+a different command, report the effective value before returning to
+automatic control. For example, the controller can request 35% while an
+actuator's priority logic holds it at 42%:</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="group-2">(</span><span class="ss">out_min</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">kp</span><span class="p">:</span><span class="w"> </span><span class="mi">10</span><span class="p" data-group-id="group-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">set_mode</span><span class="p" data-group-id="group-4">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="group-5">{</span><span class="ss">:manual</span><span class="p">,</span><span class="w"> </span><span class="mi">35</span><span class="p" data-group-id="group-5">}</span><span class="p" data-group-id="group-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-6">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">track_output</span><span class="p" data-group-id="group-7">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="mi">42</span><span class="p" data-group-id="group-7">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">output</span><span class="p" data-group-id="group-8">(</span><span class="n">pid</span><span class="p" data-group-id="group-8">)</span><span class="w">
+</span><span class="mf">35.0</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-9">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-9">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">set_mode</span><span class="p" data-group-id="group-10">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:automatic</span><span class="p" data-group-id="group-10">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-11">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="mf">42.0</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-11">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">step</span><span class="p" data-group-id="group-12">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="group-12">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-13">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">command</span><span class="p">,</span><span class="w"> </span><span class="c">_pid</span><span class="p" data-group-id="group-13">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">step</span><span class="p" data-group-id="group-14">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="mi">1</span><span class="p" data-group-id="group-14">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">command</span><span class="w">
+</span><span class="mf">32.0</span></code></pre><p>After a manual transfer, a change to the active control law, or an explicit
+call to <a href="#track_output/2"><code class="inline">track_output/2</code></a>, the next automatic sample emits the clamped
+target. The controller resets I and D and sets its tracking adjustment to
+<code class="inline">target - bias - P</code> using the fresh sample. The adjustment remains in the
+control law on later samples. This gives proportional-only loops the same
+smooth transfer as loops with an integral term. Tuning changes can be
+grouped in one call to <a href="#configure/2"><code class="inline">configure/2</code></a>.</p><h2 id="module-timing-pauses-and-retries" class="section-heading"><a href="#module-timing-pauses-and-retries" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Timing, pauses, and retries</span></h2><p>Pass the actual elapsed seconds between accepted samples. If you timestamp
+samples with <code class="inline">System.monotonic_time(:microsecond)</code>, divide the difference by
+<code class="inline">1_000_000</code>. For millisecond timestamps, divide by <code class="inline">1_000</code>. For example,
+1 ms is <code class="inline">0.001</code> seconds and 250 ms is <code class="inline">0.25</code> seconds. On the first sample
+after startup or reanchoring, any valid positive interval works because
+that step skips the time-dependent terms.</p><p>You can skip a sample if its timestamp matches the previous one. For a
+longer pause, decide how the actuator should behave while data is missing.
+When you resume, call <a href="#track_output/2"><code class="inline">track_output/2</code></a> with the command currently in effect.
+The next step uses the fresh measurement to seed D and starts a new
+integration interval without integrating across the gap.</p><p>A rejected sample leaves the old state available for retry. If you continue
+from that state, measure the next interval from the last accepted sample.
+Similarly, if a write fails and you need to resume control from a command
+the actuator actually applied, report that value before stepping again.</p><h2 id="module-autotuning" class="section-heading"><a href="#module-autotuning" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">Autotuning</span></h2><p>See <a href="HvacPid.Autotuner.html"><code class="inline">HvacPid.Autotuner</code></a> for a complete example that runs a step test,
+calculates gains, and hands control back to a controller.</p><h2 id="module-a-pi-example" class="section-heading"><a href="#module-a-pi-example" class="hover-link"><i class="ri-link-m" aria-hidden="true"></i></a><span class="text">A PI example</span></h2><p>With a gain of 8, each unit of signed error contributes 8 units to the
+proportional term. The default direct direction gives a positive error
+of 2 when the measurement is 19 and the setpoint is 21.</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="group-2">(</span><span class="ss">out_min</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">kp</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="ss">tn</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p" data-group-id="group-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">output</span><span class="p" data-group-id="group-3">(</span><span class="n">pid</span><span class="p" data-group-id="group-3">)</span><span class="w">
+</span><span class="mf">0.0</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-4">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-4">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">set_mode</span><span class="p" data-group-id="group-5">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:automatic</span><span class="p" data-group-id="group-5">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-6">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">command</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-6">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">step</span><span class="p" data-group-id="group-7">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p" data-group-id="group-7">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">command</span><span class="w">
+</span><span class="mf">16.0</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-8">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">command</span><span class="p">,</span><span class="w"> </span><span class="c">_pid</span><span class="p" data-group-id="group-8">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">step</span><span class="p" data-group-id="group-9">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">19</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p" data-group-id="group-9">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">command</span><span class="w">
+</span><span class="mf">16.2</span></code></pre><p>With the same tuning in reverse, a measurement of 23 gives the same
+positive error and first command.</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="group-2">(</span><span class="ss">out_min</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="ss">kp</span><span class="p">:</span><span class="w"> </span><span class="mi">8</span><span class="p">,</span><span class="w"> </span><span class="ss">tn</span><span class="p">:</span><span class="w"> </span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="ss">direction</span><span class="p">:</span><span class="w"> </span><span class="ss">:reverse</span><span class="p" data-group-id="group-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">set_mode</span><span class="p" data-group-id="group-4">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">:automatic</span><span class="p" data-group-id="group-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-5">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">command</span><span class="p">,</span><span class="w"> </span><span class="c">_pid</span><span class="p" data-group-id="group-5">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">step</span><span class="p" data-group-id="group-6">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="mi">21</span><span class="p">,</span><span class="w"> </span><span class="mi">23</span><span class="p">,</span><span class="w"> </span><span class="mf">0.25</span><span class="p" data-group-id="group-6">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="n">command</span><span class="w">
+</span><span class="mf">16.0</span></code></pre>
+    </section>
+
+</div>
+
+  <section id="summary" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#summary">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Summary</span>
+    </h2>
+<div class="summary-types summary">
+  <h3>
+    <a href="#types">Types</a>
+  </h3>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:error/0" data-no-tooltip="" translate="no">error()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>The reason an operation was rejected.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:mode/0" data-no-tooltip="" translate="no">mode()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>A controller mode or a manual command in output units.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:option/0" data-no-tooltip="" translate="no">option()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>One configuration setting. See <a href="#new/1"><code class="inline">new/1</code></a> for defaults and units.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#t:t/0" data-no-tooltip="" translate="no">t()</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Opaque controller state returned by the controller operations.</p></div>
+
+    </div>
+
+</div>
+<div class="summary-functions summary">
+  <h3>
+    <a href="#functions">Functions</a>
+  </h3>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#configure/2" data-no-tooltip="" translate="no">configure(state, opts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Applies a batch of settings to an existing controller.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#new/1" data-no-tooltip="" translate="no">new(opts)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Creates a disabled controller with the specified settings.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#output/1" data-no-tooltip="" translate="no">output(controller)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Returns the most recent output command in output units.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#set_mode/2" data-no-tooltip="" translate="no">set_mode(state, mode)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Selects disabled, automatic, or manual operation.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#step/4" data-no-tooltip="" translate="no">step(state, setpoint, measurement, elapsed_seconds)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Advances the controller using a setpoint, measurement, and elapsed seconds.</p></div>
+
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-signature">
+        <a href="#track_output/2" data-no-tooltip="" translate="no">track_output(state, applied_output)</a>
+
+      </div>
+
+        <div class="summary-synopsis"><p>Reports the output currently applied at the actuator.</p></div>
+
+    </div>
+
+</div>
+
+  </section>
+
+
+  <section id="types" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#types">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Types</span>
+    </h2>
+
+    <div class="types-list">
+<section class="detail" id="t:error/0">
+
+  <div class="detail-header">
+    <a href="#t:error/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">error()</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L185" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> error() ::
+  :invalid_options
+  | {:unknown_option, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">atom</a>()}
+  | {:duplicate_option, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">atom</a>()}
+  | {:missing_option, :out_min | :out_max}
+  | {:invalid_option, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">atom</a>()}
+  | :invalid_output_limits
+  | :invalid_mode
+  | {:invalid_input,
+     :setpoint
+     | :measurement
+     | :elapsed_seconds
+     | :manual_output
+     | :applied_output}
+  | :numeric_overflow</pre>
+
+      </div>
+
+<p>The reason an operation was rejected.</p><p>Option errors identify a missing bound, an unknown or duplicate key, or an
+invalid value. <code class="inline">:invalid_options</code> means the options were given in a form
+other than a keyword list. <code class="inline">:invalid_output_limits</code> means the lower bound
+exceeded the upper bound.</p><p>An invalid input error identifies the affected argument. A
+<code class="inline">:numeric_overflow</code> means a calculation exceeded the available floating
+point range even though the supplied inputs were valid.</p>
+  </section>
+</section>
+<section class="detail" id="t:mode/0">
+
+  <div class="detail-header">
+    <a href="#t:mode/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">mode()</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L200" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> mode() :: :disabled | :automatic | {:manual, <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>()}</pre>
+
+      </div>
+
+<p>A controller mode or a manual command in output units.</p>
+  </section>
+</section>
+<section class="detail" id="t:option/0">
+
+  <div class="detail-header">
+    <a href="#t:option/0" class="detail-link" data-no-tooltip="" aria-label="Link to this type">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">option()</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L205" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@type</span> option() ::
+  {:out_min | :out_max | :kp | :bias | :deadzone, <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>()}
+  | {:tn | :td | :start_value | :stop_value, <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>() | nil}
+  | {:p_enabled, <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">boolean</a>()}
+  | {:direction, :direct | :reverse}
+  | {:derivative_on, :measurement | :error}</pre>
+
+      </div>
+
+<p>One configuration setting. See <a href="#new/1"><code class="inline">new/1</code></a> for defaults and units.</p>
+  </section>
+</section>
+<section class="detail" id="t:t/0">
+
+  <div class="detail-header">
+    <a href="#t:t/0" class="detail-link" data-no-tooltip="" aria-label="Link to this opaque">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">t()</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L215" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@opaque</span> t()</pre>
+
+      </div>
+
+<p>Opaque controller state returned by the controller operations.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+  <section id="functions" class="details-list">
+    <h2 class="section-heading">
+      <a class="hover-link" href="#functions">
+        <i class="ri-link-m" aria-hidden="true"></i>
+      </a>
+      <span class="text">Functions</span>
+    </h2>
+
+    <div class="functions-list">
+<section class="detail" id="configure/2">
+
+  <div class="detail-header">
+    <a href="#configure/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">configure(state, opts)</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L319" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> configure(<a href="#t:t/0">t</a>(), [<a href="#t:option/0">option</a>()]) :: {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="#t:error/0">error</a>()}</pre>
+
+      </div>
+
+<p>Applies a batch of settings to an existing controller.</p><p>Any options omitted from the batch keep their current values. Both bounds
+are checked together, so a range can be moved in one operation. An invalid
+batch returns an error and leaves the caller's state available.</p><p>During automatic control, a change to gain, term selection, derivative
+source, direction, bias, or bounds reanchors the next sample to the current
+command or pending tracked value. Further changes before that sample retain
+the target within the new bounds. Changing only the deadzone or the start
+and stop values keeps the current control history. A controller still
+awaiting its startup sample uses the latest settings for startup.</p><p>Bounds clamp the current command immediately. Widening the range later
+keeps the clamped manual command. In disabled mode the command is
+recalculated from the new stop value and bounds.</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="group-2">(</span><span class="ss">out_min</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p">,</span><span class="w"> </span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p" data-group-id="group-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-3">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-3">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">configure</span><span class="p" data-group-id="group-4">(</span><span class="n">pid</span><span class="p">,</span><span class="w"> </span><span class="ss">out_min</span><span class="p">:</span><span class="w"> </span><span class="mi">120</span><span class="p">,</span><span class="w"> </span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">200</span><span class="p">,</span><span class="w"> </span><span class="ss">kp</span><span class="p">:</span><span class="w"> </span><span class="mi">3</span><span class="p" data-group-id="group-4">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">output</span><span class="p" data-group-id="group-5">(</span><span class="n">pid</span><span class="p" data-group-id="group-5">)</span><span class="w">
+</span><span class="mf">120.0</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="new/1">
+
+  <div class="detail-header">
+    <a href="#new/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">new(opts)</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L280" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> new([<a href="#t:option/0">option</a>()]) :: {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="#t:error/0">error</a>()}</pre>
+
+      </div>
+
+<p>Creates a disabled controller with the specified settings.</p><table><thead><tr><th style="text-align: left;">Option</th><th style="text-align: left;">Default</th><th style="text-align: left;">Meaning</th></tr></thead><tbody><tr><td style="text-align: left;"><code class="inline">:out_min</code>, <code class="inline">:out_max</code></td><td style="text-align: left;">Required</td><td style="text-align: left;">Lower and upper output bounds. Equal bounds give a fixed command.</td></tr><tr><td style="text-align: left;"><code class="inline">:kp</code></td><td style="text-align: left;"><code class="inline">1.0</code></td><td style="text-align: left;">Shared, nonnegative gain in output units per measurement unit.</td></tr><tr><td style="text-align: left;"><code class="inline">:p_enabled</code></td><td style="text-align: left;"><code class="inline">true</code></td><td style="text-align: left;">Whether to include the proportional term.</td></tr><tr><td style="text-align: left;"><code class="inline">:tn</code></td><td style="text-align: left;"><code class="inline">nil</code></td><td style="text-align: left;">Positive integral time in seconds, or <code class="inline">nil</code> to disable I.</td></tr><tr><td style="text-align: left;"><code class="inline">:td</code></td><td style="text-align: left;"><code class="inline">nil</code></td><td style="text-align: left;">Positive derivative time in seconds, or <code class="inline">nil</code> to disable D.</td></tr><tr><td style="text-align: left;"><code class="inline">:derivative_on</code></td><td style="text-align: left;"><code class="inline">:measurement</code></td><td style="text-align: left;">Use changes in measurement, or include setpoint changes with <code class="inline">:error</code>.</td></tr><tr><td style="text-align: left;"><code class="inline">:bias</code></td><td style="text-align: left;"><code class="inline">0.0</code></td><td style="text-align: left;">Constant contribution in output units.</td></tr><tr><td style="text-align: left;"><code class="inline">:deadzone</code></td><td style="text-align: left;"><code class="inline">0.0</code></td><td style="text-align: left;">Nonnegative hold radius in measurement units. Zero disables the hold.</td></tr><tr><td style="text-align: left;"><code class="inline">:direction</code></td><td style="text-align: left;"><code class="inline">:direct</code></td><td style="text-align: left;">Signed error is setpoint minus measurement in <code class="inline">:direct</code> and measurement minus setpoint in <code class="inline">:reverse</code>.</td></tr><tr><td style="text-align: left;"><code class="inline">:start_value</code></td><td style="text-align: left;"><code class="inline">nil</code></td><td style="text-align: left;">Optional output for the first automatic sample after enabling.</td></tr><tr><td style="text-align: left;"><code class="inline">:stop_value</code></td><td style="text-align: left;"><code class="inline">nil</code></td><td style="text-align: left;">Optional output for disabled mode. The lower bound is used when omitted.</td></tr></tbody></table><p>Numeric options accept integers and floats that can be represented as
+finite floats. Each key can appear once. See <a href="#t:error/0"><code class="inline">error/0</code></a> for errors.</p><pre><code class="makeup elixir" translate="no"><span class="gp unselectable">iex&gt; </span><span class="p" data-group-id="group-1">{</span><span class="ss">:ok</span><span class="p">,</span><span class="w"> </span><span class="n">pid</span><span class="p" data-group-id="group-1">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="group-2">(</span><span class="ss">out_min</span><span class="p">:</span><span class="w"> </span><span class="o">-</span><span class="mi">20</span><span class="p">,</span><span class="w"> </span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">80</span><span class="p">,</span><span class="w"> </span><span class="ss">stop_value</span><span class="p">:</span><span class="w"> </span><span class="mi">0</span><span class="p" data-group-id="group-2">)</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">output</span><span class="p" data-group-id="group-3">(</span><span class="n">pid</span><span class="p" data-group-id="group-3">)</span><span class="w">
+</span><span class="mf">0.0</span><span class="w">
+</span><span class="gp unselectable">iex&gt; </span><span class="nc">HvacPid.Controller</span><span class="o">.</span><span class="n">new</span><span class="p" data-group-id="group-4">(</span><span class="ss">out_max</span><span class="p">:</span><span class="w"> </span><span class="mi">100</span><span class="p" data-group-id="group-4">)</span><span class="w">
+</span><span class="p" data-group-id="group-5">{</span><span class="ss">:error</span><span class="p">,</span><span class="w"> </span><span class="p" data-group-id="group-6">{</span><span class="ss">:missing_option</span><span class="p">,</span><span class="w"> </span><span class="ss">:out_min</span><span class="p" data-group-id="group-6">}</span><span class="p" data-group-id="group-5">}</span></code></pre>
+  </section>
+</section>
+<section class="detail" id="output/1">
+
+  <div class="detail-header">
+    <a href="#output/1" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">output(controller)</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L432" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> output(<a href="#t:t/0">t</a>()) :: <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">float</a>()</pre>
+
+      </div>
+
+<p>Returns the most recent output command in output units.</p><p>Manual and disabled mode changes update the command immediately. This
+value represents the controller's command. Use <a href="#track_output/2"><code class="inline">track_output/2</code></a> to report
+the effective actuator output when an override applies.</p>
+  </section>
+</section>
+<section class="detail" id="set_mode/2">
+
+  <div class="detail-header">
+    <a href="#set_mode/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">set_mode(state, mode)</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L338" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> set_mode(<a href="#t:t/0">t</a>(), <a href="#t:mode/0">mode</a>()) :: {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="#t:error/0">error</a>()}</pre>
+
+      </div>
+
+<p>Selects disabled, automatic, or manual operation.</p><p>Disabled and manual commands take effect immediately. Automatic operation
+waits for a fresh sample. When coming from manual mode it anchors to the
+last manual command or to the most recent tracked value. Reapplying the
+current mode is idempotent. Two manual requests that clamp to the same
+command count as the same mode.</p><p>Returns <code class="inline">{:error, :invalid_mode}</code> for an unsupported mode, or
+<code class="inline">{:error, {:invalid_input, :manual_output}}</code> for an invalid manual value.</p>
+  </section>
+</section>
+<section class="detail" id="step/4">
+
+  <div class="detail-header">
+    <a href="#step/4" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">step(state, setpoint, measurement, elapsed_seconds)</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L414" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> step(<a href="#t:t/0">t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>()) ::
+  {:ok, <a href="https://elixir.hexdocs.pm/typespecs.html#basic-types">float</a>(), <a href="#t:t/0">t</a>()} | {:error, <a href="#t:error/0">error</a>()}</pre>
+
+      </div>
+
+<p>Advances the controller using a setpoint, measurement, and elapsed seconds.</p><p>The setpoint and measurement must share units. All three arguments must
+be finite numbers, and elapsed seconds must be strictly positive. Fractional
+intervals are used as supplied. Manual and disabled steps validate their
+inputs and return the current command. Manual steps also remember the
+sample, while transfer to automatic control seeds history from a fresh one.</p><p>Returns <code class="inline">{:ok, command, state}</code> on success, or <code class="inline">{:error, reason}</code> for
+invalid input or numeric overflow. See <a href="#t:error/0"><code class="inline">error/0</code></a>.</p>
+  </section>
+</section>
+<section class="detail" id="track_output/2">
+
+  <div class="detail-header">
+    <a href="#track_output/2" class="detail-link" data-no-tooltip="" aria-label="Link to this function">
+      <i class="ri-link-m" aria-hidden="true"></i>
+    </a>
+    <div class="heading-with-actions">
+      <h1 class="signature" translate="no">track_output(state, applied_output)</h1>
+
+
+        <a href="https://github.com/bacnet-ex/hvac_pid/blob/master/lib/hvac_pid/controller.ex#L391" class="icon-action" rel="help nofollow" aria-label="View Source">
+          <i class="ri-code-s-slash-line" aria-hidden="true"></i>
+        </a>
+
+    </div>
+  </div>
+
+  <section class="docstring">
+
+      <div class="specs">
+
+          <pre translate="no"><span class="attribute">@spec</span> track_output(<a href="#t:t/0">t</a>(), <a href="https://elixir.hexdocs.pm/typespecs.html#built-in-types">number</a>()) :: {:ok, <a href="#t:t/0">t</a>()} | {:error, <a href="#t:error/0">error</a>()}</pre>
+
+      </div>
+
+<p>Reports the output currently applied at the actuator.</p><p>In automatic mode the latest report becomes the target for the next
+sample, including when reported between enabling and the startup sample.
+In manual mode it supplies the later transfer target while the manual
+command stays in effect. Selecting a different manual command clears that
+target. Disabled mode keeps its stop command and starts afresh on enable.</p><p>Tracking clamps the reported value to the bounds and leaves <a href="#output/1"><code class="inline">output/1</code></a>
+reporting the current command until the next automatic sample. Returns
+<code class="inline">{:error, {:invalid_input, :applied_output}}</code> for an invalid value.</p>
+  </section>
+</section>
+
+    </div>
+  </section>
+
+    <footer class="footer">
+
+        <p>
+
+            <span class="line">
+              <a href="https://hex.pm/packages/hvac_pid/0.1.1">Hex Package</a>
+
+              <a href="https://preview.hex.pm/preview/hvac_pid/0.1.1">Hex Preview</a>
+
+            </span>
+
+          <span class="line">
+            <button class="a-main footer-button display-quick-switch" title="Go to package docs">
+              Go to package docs
+            </button>
+
+
+          </span>
+        </p>
+
+        <p class="built-using">
+          Built using
+          <a href="https://github.com/elixir-lang/ex_doc" title="ExDoc" target="_blank" rel="help noopener" translate="no">ExDoc</a> (v0.40.4) for the
+
+            <a href="https://elixir-lang.org" title="Elixir" target="_blank" translate="no">Elixir programming language</a>
+
+        </p>
+
+
+    </footer>
+  </div>
+</main>
+</div>
+
+  </body>
+</html>
