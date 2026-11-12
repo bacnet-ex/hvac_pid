@@ -122,6 +122,11 @@ defmodule HvacPid.Controller do
   Similarly, if a write fails and you need to resume control from a command
   the actuator actually applied, report that value before stepping again.
 
+  ## Autotuning
+
+  See `HvacPid.Autotuner` for a complete example that runs a step test,
+  calculates gains, and hands control back to a controller.
+
   ## A PI example
 
   With a gain of 8, each unit of signed error contributes 8 units to the

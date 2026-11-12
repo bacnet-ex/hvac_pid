@@ -36,6 +36,14 @@ when increasing the command lowers the measured value. Pass the returned
 `pid` to the next call. The `HvacPid.Controller` module docs explain the
 control law and how to handle retuning, pauses, and actuator overrides.
 
+## Autotuning
+
+`HvacPid.Autotuner` can estimate controller gains from a step response or
+from relay oscillations. During the experiment, the application sends
+samples to the tuner and writes its bounded commands through the usual
+actuator interface. The module docs show how to review the result and
+resume automatic control from the output currently in effect.
+
 ## Development
 
 Run `mix test --cover` for the unit tests, simulated heating and cooling
